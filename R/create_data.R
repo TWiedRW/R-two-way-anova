@@ -26,7 +26,7 @@ df_agriculture <- expand_grid(fertilizer = fertilizer, brand = brand)
 df_agriculture$height_mean <-  c(20, 30, 40, 25)
 
 agriculture_data <- expand_grid(df_agriculture, rep = 1:4) %>%
-  mutate(height = map_dbl(height_mean, \(x)(rnorm(1, mean = x, sd = 2)))) %>%
+  mutate(height = map_dbl(height_mean, \(x)(round(rnorm(1, mean = x, sd = 2), 2)))) %>%
   select(fertilizer, brand, rep, height)
 
 with(agriculture_data, interaction.plot(fertilizer, brand, height))
@@ -42,7 +42,7 @@ salt <- c(15, 20, 25)
 bacteria <- expand_grid(ph, salt) %>%
   mutate(logcfu_mean = c(2, 2.1, 2.2,   2.2, 2.4, 2.5,    2.2, 2.2, 2.4)) %>%
   expand_grid(rep = 1:4) %>%
-  mutate(logcfu = map_dbl(logcfu_mean, \(x)(rnorm(1, mean = x, sd = 0.2)))) %>%
+  mutate(logcfu = map_dbl(logcfu_mean, \(x)(round(rnorm(1, mean = x, sd = 0.2), 2)))) %>%
   select(ph, salt, rep, logcfu)
 
 with(bacteria, interaction.plot(ph, salt, logcfu))
