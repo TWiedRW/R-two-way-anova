@@ -1,0 +1,42 @@
+---
+title: "Design of Experiments"
+subtitle: "Two-way ANOVA and examples in R"
+author: "Tyler Wiederich"
+institute: "Statistical Cross-disciplinary Collaboration & Consulting Lab"
+format: 
+  revealjs:
+    self-contained: true
+    fig-align: center
+    navigation-mode: vertical
+    slide-number: true
+    show-slide-number: print
+    smaller: true
+    logo: "../images/nebraska-n.jpg"
+---
+
+```{r}
+knitr::opts_chunk$set(fig.align = 'center')
+```
+
+
+
+## About us
+
+:::: {.columns}
+
+::: {.column}
+
+- We are the Statistical Cross-disciplinary Collaboration & Consulting Lab (SC3L) from the UNL Department of Statistics.
+- We offer free statistical consulting services to students, faculty, and staff at UNL.
+- Workshops! Hosted from 1-2pm on Wednesdays and Thursdays.
+
+:::
+
+::: {.column}
+
+![](../images/sc3l-logo.png){align=center}
+
+:::
+
+::::
+
