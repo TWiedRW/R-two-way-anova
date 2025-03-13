@@ -30,6 +30,7 @@ agriculture_data <- expand_grid(df_agriculture, rep = 1:4) %>%
   select(fertilizer, brand, rep, height)
 
 with(agriculture_data, interaction.plot(fertilizer, brand, height))
+with(agriculture_data, interaction.plot(brand, fertilizer, height))
 
 write_csv(agriculture_data, 'data/example1-agriculture.csv')
 
@@ -45,5 +46,6 @@ bacteria <- expand_grid(ph, salt) %>%
   select(ph, salt, rep, logcfu)
 
 with(bacteria, interaction.plot(ph, salt, logcfu))
+with(bacteria, interaction.plot(salt, ph, logcfu))
 
 write_csv(bacteria, 'data/example2-bacteria.csv')
