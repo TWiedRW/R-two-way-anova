@@ -7,36 +7,349 @@ format:
   revealjs:
     self-contained: true
     fig-align: center
+    scrollable: true
     navigation-mode: vertical
     slide-number: true
     show-slide-number: print
     smaller: true
     logo: "../images/nebraska-n.jpg"
+execute: 
+  echo: true
 ---
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
 knitr::opts_chunk$set(fig.align = 'center')
+library(tidyverse)
+```
+
+## About us
+
+::::: columns
+::: column
+-   We are the Statistical Cross-disciplinary Collaboration & Consulting Lab (SC3L) from the UNL Department of Statistics.
+-   We offer free statistical consulting services to students, faculty, and staff at UNL.
+-   Workshops! Hosted from 1-2pm on Wednesdays and Thursdays.
+:::
+
+::: column
+![](../images/sc3l-logo.png){align="center"}
+:::
+:::::
+
+# Two-way ANOVA
+
+## Two-way ANOVA
+
+**What is ANOVA?**
+
+-   **AN**alysis **O**f **VA**riance
+-   Compare the means of three or more treatment groups
+    -   Extension of the t-test
+
+**When to use two-way ANOVA?**
+
+-   Analyze the effect of two independent variables on a single response
+    -   Effect of fertilizer type and planting density when measuring crop yield
+    -   Effect of sugar and flour when measuring cake consistency
+
+## Two-way ANOVA
+
+```{mermaid}
+%%| mermaid-format: svg
+%%| echo: false
+
+flowchart TB
+  subgraph One Replication
+  A[Factor A] --> C{All combinations}
+  B[Factor B] --> C
+  C --> D[Randomize Order]
+  D --> F[Experiment]
+  end
+```
+
+## Model
+
+Let A and B represent two factors. A has levels $i=1\dots a$ and B has levels $j=1\dots b$, and there are $k=1\dots r$ replications. The model is given by:
+
+$$
+Y_{ijk}=\mu + A_i+B_j+(AB)_{ij}+\epsilon_{ijk}
+$$
+
+Where
+
+-   $Y_{ijk}$ is the response for the $k$th replication of level $i$ for factor A and level $j$ for factor B.
+-   $\mu$ is the overall mean
+-   $A_i$ is the effect of level $i$ for factor A
+-   $B_j$ is the effect of level $j$ for factor B
+-   $(AB)_{ij}$ is the interaction effect for level $i$
+-   $\epsilon_{ijk}\sim iid \quad Normal(0, \sigma^2)$
+
+Assumptions
+
+-   Residuals are normally distributed
+-   Homogeneity of variance (variance is constant)
+-   Independence of observations
+
+## ANOVA Table
+
+| Source | Sum of Squares | df | Mean Square | F-Statistic |
+|-------------|---------------------------|-------------|---------------------------|-------------|
+| Factor A | $rb\sum_{i=1}^a(\bar{Y}_{i\cdot\cdot}-\bar{Y}_{\cdot\cdot\cdot})^2$ | $a-1$ | $MS_A=\frac{SS_A}{(a-1)}$ | $\frac{MS_A}{MS_E}$ |
+| Factor B | $ra\sum_{j=1}^b(\bar{Y}_{\cdot j\cdot}-\bar{Y}_{\cdot\cdot\cdot})^2$ | $b-1$ | $MS_B=\frac{SS_B}{(b-1)}$ | $\frac{MS_B}{MS_E}$ |
+| Interaction (A x B) | $r\sum_{i=1}^a\sum_{j=1}^b(\bar{Y}_{ij\cdot}-\bar{Y}_{i\cdot\cdot}-\bar{Y}_{\cdot j\cdot}+\bar{Y}_{\cdot\cdot\cdot})^2$ | $(a-1)(b-1)$ | $MS_{AB}=\frac{SS_{AB}}{(a-1)(b-1)}$ | $\frac{MS_{AB}}{MS_E}$ |
+| Error | $\sum_{i=1}^a\sum_{j=1}^b\sum_{k=1}^r(Y_{ijk}-\bar{Y}_{ij\cdot})^2$ | $ab(r-1)$ | $MS_E=\frac{SS_E}{ab(r-1)}$ |  |
+| Total | $\sum_{i=1}^a\sum_{j=1}^b\sum_{k=1}^r(Y_{ijk}-\bar{Y}_{\cdot\cdot\cdot})^2$ | $abr-1$ |  |  |
+
+: ANOVA Table
+
+p-values are calculated by taking the probability of observing the F-statistic or larger values from an F-distribution.
+
+---
+
+```{r}
+#| fig-align: center
+#| fig-cap: "Calculation of p-value under an F distribution."
+#| echo: false
+
+num.df = 10
+den.df = 50
+f.alpha = 0.05
+
+tibble(x = seq(0, 4, l = 100)) %>% 
+ggplot(mapping = aes(x = x)) + 
+  stat_function(fun = \(x)(df(ifelse(x > qf(f.alpha, 
+                                            num.df, 
+                                            den.df, lower.tail = F), x, NA), num.df, den.df)), 
+                geom = 'area', fill = 'red') + 
+  stat_function(fun = \(x)(df(x, num.df, den.df)), geom = 'line') + 
+  theme_bw() + 
+  geom_hline(yintercept = 0) + 
+  geom_vline(xintercept = 0) +
+  labs(x = 'X', y = expression(f[x]),
+       subtitle = 'P(F > F-statistic)',
+       title = expression(F(df[term], df[error]))) + 
+  theme(aspect.ratio = 1/2,
+        axis.title.y = element_text(angle = 0, vjust = 0.5, hjust = 0),
+        axis.text.y = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        panel.border = element_blank(),
+        panel.grid = element_blank(),
+        axis.ticks = element_blank())
+```
+
+
+# Example 1: Fertilizer Experiment
+
+## Example 1
+
+An experiment was conducted to measure the effect of fertilizer on the growth height of a plant. Researchers used two brands of fertilizers (Easy-Plant and Fast-Grow) with two quantities (low and high). Each combination of fertilizer brand and quantity were applied to individual pots of plants, measuring the plant height after a set growing period.
+
+Link to datasets: [https://github.com/StatHelpUNL/Workshop_25Spring](https://github.com/StatHelpUNL/Workshop_25Spring)
+
+You can load the data using the following code:
+
+```{r}
+#| echo: true
+agriculture <- read.csv('data/example1-agriculture.csv')
+head(agriculture)
+```
+
+## Interaction plots
+
+```{r}
+#| echo: true
+
+with(agriculture, interaction.plot(brand, fertilizer, height))
+with(agriculture, interaction.plot(fertilizer, brand, height))
+```
+
+## Fitting a model
+
+```{r}
+#| echo: true
+
+
+model1 <- lm(height ~ fertilizer*brand,
+             data = agriculture)
+model1
+
+# aov(height ~ fertilizer*brand,
+#              data = agriculture)
+```
+
+## Model Summary
+
+```{r}
+#| echo: true
+
+
+summary(model1)
+```
+
+## ANOVA Table
+
+```{r}
+#| warning: false
+#| echo: true
+
+anova(model1)
+
+library(car)
+Anova(model1, type = 3)
+```
+
+## Estimated Means
+
+The interaction term was significant, so we should only consider differences at each treatment combination.
+
+```{r}
+#| echo: true
+
+
+library(emmeans)
+em1 <- emmeans(model1, ~brand*fertilizer)
+em1
+
+emmeans(model1, ~fertilizer|brand)
+```
+
+## Estimated differences
+
+```{r}
+#| echo: true
+
+pairs(em1)
+pairs(em1, infer = c(T,T))
+```
+
+## Fit of model
+
+```{r}
+#| layout-ncol: 2
+#| layout-nrow: 2
+#| echo: true
+
+plot(model1)
+```
+
+# Example 2: Bacteria Growth
+
+## Example 2
+
+An experiment was conducted to measure the effect of pH and salt concentration on bacteria growth.
+Bacteria were placed into Petri dishes and were given a solution that consisted of a pH and salt concentration combination.
+pH levels were set at levels of 6, 7, and 8, and salt concentration levels were set at 15%, 20%, and 25%.
+After a set amount of time, the bacteria growth was measured by log CFU (colony forming unit).
+
+```{r}
+bacteria <- read.csv('data/example2-bacteria.csv')
+head(bacteria)
+```
+
+## Interaction plots
+
+```{r}
+#| echo: true
+with(bacteria, interaction.plot(ph, salt, logcfu))
+with(bacteria, interaction.plot(salt, ph, logcfu))
+```
+
+## Fitting a model
+
+**Option 1:** categorical factors
+
+- Use this option if you are interested in the categories themselves.
+- Same approach as previous example, but convert treatments to factors.
+
+```{r}
+#| echo: true
+model2a <- lm(logcfu ~ factor(ph)*factor(salt), 
+              data = bacteria)
+```
+
+**Option 2:** quantitative factors
+
+- Use this option if you are interested in measuring polynomial trends and/or making predictions.
+
+```{r}
+#| echo: true
+model2b <- lm(logcfu ~ (ph + I(ph^2))*(salt + I(salt^2)),
+              data = bacteria)
+```
+
+Note: You can get the same results from both models using polynomial orthogonal contrasts.
+
+## Model Summary
+
+```{r}
+summary(model2b)
+```
+
+## ANOVA Table
+
+```{r}
+anova(model2b)
+```
+
+## Estimated Means
+
+```{r}
+em2 <- emmeans(model2b, ~ph*salt)
+em2
+```
+
+What happened here??
+
+## Estimated Means
+
+```{r}
+em2b <- emmeans(model2b, ~ph*salt,
+                at = list(ph = c(6, 7, 8),
+                          salt = c(15, 20, 25)))
+em2b
+```
+
+## Differences
+
+```{r}
+pairs(em2b)
+```
+
+## Fit of Model
+
+```{r}
+#| layout-ncol: 2
+#| layout-nrow: 2
+
+
+plot(model2b)
 ```
 
 
 
-## About us
+# Wrap-up
 
-:::: {.columns}
+## Other Considerations
 
-::: {.column}
+- R uses Type I Sums of Squares by default.
+    - Type I: sequential fit, good for regression
+    - Type III: fits all together, good for categorical treatment factors
+    - For balanced design, these will give same result
 
-- We are the Statistical Cross-disciplinary Collaboration & Consulting Lab (SC3L) from the UNL Department of Statistics.
-- We offer free statistical consulting services to students, faculty, and staff at UNL.
-- Workshops! Hosted from 1-2pm on Wednesdays and Thursdays.
+```{r}
+#| eval: false
+options(contrasts = c("contr.sum", "contr.poly"))
+```
 
-:::
+- Model matrices are defined differently compared to other software packages.
+    - Model coefficients could be different, but results are the same
+    - See `?contr.sum` for more details
 
-::: {.column}
+## Thank you
 
-![](../images/sc3l-logo.png){align=center}
-
-:::
-
-::::
-
+Visit our website to schedule an appointment! [https://statistics.unl.edu/sc3lhelp-desk/](https://statistics.unl.edu/sc3lhelp-desk/)
