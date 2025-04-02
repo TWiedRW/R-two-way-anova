@@ -85,7 +85,7 @@ Where
 -   $\mu$ is the overall mean
 -   $A_i$ is the effect of level $i$ for factor A
 -   $B_j$ is the effect of level $j$ for factor B
--   $(AB)_{ij}$ is the interaction effect for level $i$
+-   $(AB)_{ij}$ is the interaction effect
 -   $\epsilon_{ijk}\sim iid \quad Normal(0, \sigma^2)$
 
 Assumptions
